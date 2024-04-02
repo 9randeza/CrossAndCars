@@ -3,8 +3,10 @@
 #include <thread>
 #include <deque>
 #include <string>
+#include <vector>
 
 bool trafLight = true;
+std::mutex m;
 
 struct ManyCarsInOneRoad{
 	std::string message;
@@ -17,6 +19,7 @@ struct ManyCarsInCross{
 };
 
 void out(int i, int N, int S, int W, int E){
+	std::lock_guard l(m);
 	if(N != 0){
 		std::cout << i << " car drive on road 2\n";
 	}
@@ -40,22 +43,22 @@ void road(int N, int S, int W, int E, int* n, int* s, int* w, int* e){
 		std::cout << "green on road B\n";
 		trafLight = false;
 	}
-	
+	std::vector<std::jthread> threads;
 
 	while(S > 0){
-		std::jthread pusht1(out, s[S - 1], 0, S, 0, 0);
+		threads.emplace_back(out, s[S - 1], 0, S, 0, 0);
 		S--;
 	}
 	while(N > 0){
-		std::jthread pusht(out, n[N - 1], N, 0, 0, 0);
+		threads.emplace_back(out, n[N - 1], N, 0, 0, 0);
 		N--;
 	}
 	while(W > 0){
-		std::jthread pusht2(out, w[W - 1], 0, 0, W, 0);
+		threads.emplace_back(out, w[W - 1], 0, 0, W, 0);
 		W--;
 	}
 	while(E > 0){
-		std::jthread pusht3(out, e[E - 1], 0, 0, 0, E);
+		threads.emplace_back(out, e[E - 1], 0, 0, 0, E);
 		E--;
 	}
 	
@@ -139,8 +142,8 @@ void ss_check(int i, std::deque<std::pair<int, int>>::iterator start, std::deque
 }
 
 int main(){
-	std::deque<int> t = {1, 1, 1, 1, 2};
-	std::deque<std::pair<int, int>> ss = {{1,1}, {2, 2}, {2, 3}, {1, 4}, {3, 5}};
+	std::deque<int> t = {1, 1, 1, 2, 2};
+	std::deque<std::pair<int, int>> ss = {{1,1}, {2, 2}, {2, 3}, {4, 4}, {3, 5}};
 	int o = 1;
 	try{
 		while(!t.empty()){
